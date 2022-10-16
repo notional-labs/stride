@@ -131,13 +131,11 @@ require (
 replace (
 	// Use the keyring specified by the cosmos-sdk
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
-
 	// dragonberry replkace line per: https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.9
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
-	// TODO(TEST-54): Should we delete this replace statement and use the core cosmos-sdk for mainnet?
-	// NOTE: If you need to bump the cosmos-sdk version, create a branch at the commit hash
-	// of the target version on github.com/Stride-Labs/cosmos-sdk, then remove the error redaction
-	// logic and push a new tag and the branch to github (use that tag below)
+	// Cosmos SDK v0.45.x + ica patch
+	github.com/cosmos/cosmos-sdk => github.com/stride-labs/cosmos-sdk v0.45.9-0.20221016084427-35d2308b9206
+	// cosmos-sdk flavored protocol buffers
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	// Use a specific version of ignite cli
 	github.com/ignite-hq/cli => github.com/ignite-hq/cli v0.21.0
