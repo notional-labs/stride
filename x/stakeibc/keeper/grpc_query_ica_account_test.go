@@ -8,7 +8,7 @@ import (
 	"github.com/Stride-Labs/stride/x/stakeibc/types"
 )
 
-func (suite KeeperTestSuite) TestICAAccountQuery() {
+func (suite KeeperTestSuite) TestICAAccountQuery() { //nolint:govet // we're aware that we're passing a lock, and this is a test.
 	item := suite.createTestICAAccount()
 	wctx := sdk.WrapSDKContext(suite.Ctx())
 	for _, tc := range []struct {
