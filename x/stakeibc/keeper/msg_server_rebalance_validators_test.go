@@ -7,7 +7,6 @@ import (
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
 
-	"github.com/Stride-Labs/stride/v3/testutil/sample"
 	epochtypes "github.com/Stride-Labs/stride/v3/x/epochs/types"
 	icacallbackstypes "github.com/Stride-Labs/stride/v3/x/icacallbacks/types"
 	stakeibctypes "github.com/Stride-Labs/stride/v3/x/stakeibc/types"
@@ -96,12 +95,12 @@ func (s *KeeperTestSuite) SetupRebalanceValidators() RebalanceValidatorsTestCase
 	// base valid messages
 	validMsgs := []stakeibctypes.MsgRebalanceValidators{
 		{
-			Creator:      "stride_ADDRESS",
+			Creator:      "stride1k8c2m5cn322akk5wy8lpt87dd2f4yh9azg7jlh",
 			HostZone:     "GAIA",
 			NumRebalance: 1,
 		},
 		{
-			Creator:      "stride_ADDRESS",
+			Creator:      "stride1k8c2m5cn322akk5wy8lpt87dd2f4yh9azg7jlh",
 			HostZone:     "GAIA",
 			NumRebalance: 2,
 		},
@@ -134,7 +133,7 @@ func (s *KeeperTestSuite) TestRebalanceValidators_Successful() {
 
 	// Rebalance one validator
 	badMsg_rightWeights := stakeibctypes.MsgRebalanceValidators{
-		Creator:      "stride_ADDRESS",
+		Creator:      "stride1k8c2m5cn322akk5wy8lpt87dd2f4yh9azg7jlh",
 		HostZone:     "GAIA",
 		NumRebalance: 2,
 	}
@@ -167,21 +166,22 @@ func (s *KeeperTestSuite) TestRebalanceValidators_InvalidNumValidators() {
 
 	// Rebalance with 0 validators should fail
 	badMsg_tooFew := stakeibctypes.MsgRebalanceValidators{
-		Creator:      sample.AccAddress(),
+		Creator:      "stride1k8c2m5cn322akk5wy8lpt87dd2f4yh9azg7jlh", //need to change to utils.Admin later on ?
 		HostZone:     "GAIA",
 		NumRebalance: 0,
 	}
 	_, err := s.GetMsgServer().RebalanceValidators(sdk.WrapSDKContext(s.Ctx), &badMsg_tooFew)
-	expectedErrMsg := "invalid number of validators"
+	expectedErrMsg := `invalid number of validators to rebalance (0): invalid request` // \d+ with regex not work ??
 	s.Require().EqualError(err, expectedErrMsg, "rebalancing 0 validators should fail")
 
 	// Rebalance with 5 validators should fail
 	badMsg_tooMany := stakeibctypes.MsgRebalanceValidators{
-		Creator:      sample.AccAddress(),
+		Creator:      "stride1k8c2m5cn322akk5wy8lpt87dd2f4yh9azg7jlh",
 		HostZone:     "GAIA",
 		NumRebalance: 5,
 	}
 	_, err = s.GetMsgServer().RebalanceValidators(sdk.WrapSDKContext(s.Ctx), &badMsg_tooMany)
+	expectedErrMsg = `invalid number of validators to rebalance (5): invalid request`
 	s.Require().EqualError(err, expectedErrMsg, "rebalancing 5 validators should fail")
 }
 
@@ -190,7 +190,7 @@ func (s *KeeperTestSuite) TestRebalanceValidators_InvalidNoChange() {
 
 	// Rebalance with all weights properly set should fail
 	badMsg_rightWeights := stakeibctypes.MsgRebalanceValidators{
-		Creator:      "stride_ADDRESS",
+		Creator:      "stride1k8c2m5cn322akk5wy8lpt87dd2f4yh9azg7jlh", //"stride_ADDRESS",
 		HostZone:     "GAIA",
 		NumRebalance: 1,
 	}
@@ -209,7 +209,7 @@ func (s *KeeperTestSuite) TestRebalanceValidators_InvalidNoValidators() {
 
 	// Rebalance with all weights properly set should fail
 	badMsg_noValidators := stakeibctypes.MsgRebalanceValidators{
-		Creator:      "stride_ADDRESS",
+		Creator:      "stride1k8c2m5cn322akk5wy8lpt87dd2f4yh9azg7jlh",
 		HostZone:     "GAIA",
 		NumRebalance: 2,
 	}
@@ -231,7 +231,7 @@ func (s *KeeperTestSuite) TestRebalanceValidators_InvalidAllValidatorsNoWeight()
 
 	// Rebalance with all weights properly set should fail
 	badMsg_noValidators := stakeibctypes.MsgRebalanceValidators{
-		Creator:      "stride_ADDRESS",
+		Creator:      "stride1k8c2m5cn322akk5wy8lpt87dd2f4yh9azg7jlh",
 		HostZone:     "GAIA",
 		NumRebalance: 2,
 	}
@@ -253,7 +253,7 @@ func (s *KeeperTestSuite) TestRebalanceValidators_InvalidNotEnoughDiff() {
 
 	// Rebalance without enough difference should fail
 	badMsg_noValidators := stakeibctypes.MsgRebalanceValidators{
-		Creator:      "stride_ADDRESS",
+		Creator:      "stride1k8c2m5cn322akk5wy8lpt87dd2f4yh9azg7jlh",
 		HostZone:     "GAIA",
 		NumRebalance: 2,
 	}
