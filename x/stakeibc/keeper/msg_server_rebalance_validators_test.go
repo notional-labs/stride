@@ -7,6 +7,7 @@ import (
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
 
+	"github.com/Stride-Labs/stride/v3/testutil/sample"
 	epochtypes "github.com/Stride-Labs/stride/v3/x/epochs/types"
 	icacallbackstypes "github.com/Stride-Labs/stride/v3/x/icacallbacks/types"
 	stakeibctypes "github.com/Stride-Labs/stride/v3/x/stakeibc/types"
@@ -166,7 +167,7 @@ func (s *KeeperTestSuite) TestRebalanceValidators_InvalidNumValidators() {
 
 	// Rebalance with 0 validators should fail
 	badMsg_tooFew := stakeibctypes.MsgRebalanceValidators{
-		Creator:      "stride_ADDRESS",
+		Creator:      sample.AccAddress(),
 		HostZone:     "GAIA",
 		NumRebalance: 0,
 	}
@@ -176,7 +177,7 @@ func (s *KeeperTestSuite) TestRebalanceValidators_InvalidNumValidators() {
 
 	// Rebalance with 5 validators should fail
 	badMsg_tooMany := stakeibctypes.MsgRebalanceValidators{
-		Creator:      "stride_ADDRESS",
+		Creator:      sample.AccAddress(),
 		HostZone:     "GAIA",
 		NumRebalance: 5,
 	}

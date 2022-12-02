@@ -44,15 +44,12 @@ func (k msgServer) RebalanceValidators(goCtx context.Context, msg *types.MsgReba
 		k.Logger(ctx).Error(fmt.Sprintf("Host Zone not found %s", msg.HostZone))
 		return nil, types.ErrInvalidHostZone
 	}
+
 	maxNumRebalance := cast.ToInt(msg.NumRebalance)
-	if maxNumRebalance < 1 {
-		k.Logger(ctx).Error(fmt.Sprintf("Invalid number of validators to rebalance %d", maxNumRebalance))
-		return nil, types.ErrInvalidNumValidator
+	if err := msg.ValidateBasic(); err != nil {
+		return nil, err
 	}
-	if maxNumRebalance > 4 {
-		k.Logger(ctx).Error(fmt.Sprintf("Invalid number of validators to rebalance %d", maxNumRebalance))
-		return nil, types.ErrInvalidNumValidator
-	}
+
 	validatorDeltas, err := k.GetValidatorDelegationAmtDifferences(ctx, hostZone)
 	if err != nil {
 		k.Logger(ctx).Error(fmt.Sprintf("Error getting validator deltas for Host Zone %s: %s", hostZone.ChainId, err))

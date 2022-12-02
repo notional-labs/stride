@@ -10,6 +10,8 @@ import (
 )
 
 const TypeMsgRebalanceValidators = "rebalance_validators"
+const MIN_NUM_REBALANCE = 1
+const MAX_NUM_REBALANCE = 4
 
 var _ sdk.Msg = &MsgRebalanceValidators{}
 
@@ -50,8 +52,9 @@ func (msg *MsgRebalanceValidators) ValidateBasic() error {
 	if err := utils.ValidateAdminAddress(msg.Creator); err != nil {
 		return err
 	}
-	if (msg.NumRebalance < 1) || (msg.NumRebalance > 10) {
+	if (msg.NumRebalance < MIN_NUM_REBALANCE) || (msg.NumRebalance > MAX_NUM_REBALANCE) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, fmt.Sprintf("invalid number of validators to rebalance (%d)", msg.NumRebalance))
 	}
+
 	return nil
 }
