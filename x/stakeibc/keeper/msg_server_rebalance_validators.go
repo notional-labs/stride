@@ -46,9 +46,6 @@ func (k msgServer) RebalanceValidators(goCtx context.Context, msg *types.MsgReba
 	}
 
 	maxNumRebalance := cast.ToInt(msg.NumRebalance)
-	if err := msg.ValidateBasic(); err != nil {
-		return nil, err
-	}
 
 	validatorDeltas, err := k.GetValidatorDelegationAmtDifferences(ctx, hostZone)
 	if err != nil {
