@@ -131,6 +131,7 @@ replace (
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 
 	// use modified version of iavl to correct height of authz store
+	// https://github.com/notional-labs/iavl/tree/commit-recent-height
 	github.com/cosmos/iavl => github.com/notional-labs/iavl v0.17.3-0.20221212022030-21b92f181223
 
 	// use cosmos-flavored protobufs
