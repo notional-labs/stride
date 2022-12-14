@@ -127,11 +127,14 @@ func (s *KeeperTestSuite) SetupGetHostZoneUnbondingMsgs(tc GetHostZoneUnbondingM
 		hostZone.ChainId = tc.chainId
 	}
 
+	if tc.DelegationAccount != &delegationAccount {
+		hostZone.DelegationAccount = tc.DelegationAccount
+	}
+
 	return amtToUnbond, hostZone
 }
 
 func (s *KeeperTestSuite) VerifyTestCase_TestGetHostZoneUnbondingMsgs(name string, tc GetHostZoneUnbondingMsgsTestCase) {
-
 	s.Setup()
 	amtToUnbond, hostZone := s.SetupGetHostZoneUnbondingMsgs(tc)
 	actualUnbondMsgs, actualAmtToUnbond, actualCallbackArgs, _, err := s.App.StakeibcKeeper.GetHostZoneUnbondingMsgs(s.Ctx, hostZone)
@@ -201,7 +204,7 @@ func (s *KeeperTestSuite) TestGetHostZoneUnbondingMsgs_UnbodingTooMuch() {
 		validator.DelegationAmt = 0
 	}
 	test.expectPass = false
-	test.expectErr = sdkerrors.Wrap(types.ErrNoValidatorAmts, fmt.Sprintf("Error getting target val amts for host zone %s %d: no non-zero validator weights", "GAIA", uint64(2_000_000)))
+	test.expectErr = sdkerrors.Wrap(types.ErrHostZoneNotFound, fmt.Sprintf("Could not unbond %d on Host Zone GAIA, unable to balance the unbond amount across validators", uint64(2_000_000)))
 	s.VerifyTestCase_TestGetHostZoneUnbondingMsgs(name, test)
 }
 func (s *KeeperTestSuite) TestGetHostZoneUnbondingMsgs_NoNonzeroWeightValidator() {
@@ -262,7 +265,6 @@ func (s *KeeperTestSuite) VerifyTestCase_TestDistributeUnbondingAmountToValidato
 	s.Setup()
 	amtToUnbond, hostZone := s.SetupGetHostZoneUnbondingMsgs(tc)
 	actualAmtToUnbond, err := s.App.StakeibcKeeper.DistributeUnbondingAmountToValidators(s.Ctx, hostZone, amtToUnbond)
-	fmt.Println(actualAmtToUnbond)
 
 	if tc.expectPass {
 		s.Require().NoError(err)
@@ -277,7 +279,6 @@ func (s *KeeperTestSuite) VerifyTestCase_TestDistributeUnbondingAmountToValidato
 
 	} else {
 		s.Require().Error(err)
-
 		s.Require().EqualError(err, tc.expectErr.Error())
 	}
 
@@ -294,7 +295,7 @@ func (s *KeeperTestSuite) TestDistributeUnbondingAmountToValidators_EmptyValidat
 	var test = defaultUnbondingTestCase
 	test.expectPass = false
 	test.Validators = []*stakeibc.Validator{}
-	test.expectErr = sdkerrors.Wrap(stakeibc.ErrNoValidatorAmts, fmt.Sprintf("Error getting target val amts for host zone %s %d: no non-zero validator weights", "GAIA", uint64(1_000_000)))
+	test.expectErr = sdkerrors.Wrap(stakeibc.ErrNoValidatorAmts, fmt.Sprintf("Error getting target val amts for host zone GAIA %d: no non-zero validator weights", uint64(1_000_000)))
 
 	s.VerifyTestCase_TestDistributeUnbondingAmountToValidators(name, test)
 
@@ -307,7 +308,7 @@ func (s *KeeperTestSuite) TestDistributeUnbondingAmountToValidators_TotalWeightI
 		validator.Weight = 0
 	}
 	test.expectPass = false
-	test.expectErr = sdkerrors.Wrap(stakeibc.ErrNoValidatorAmts, fmt.Sprintf("Error getting target val amts for host zone %s %d: no non-zero validator weights", "GAIA", uint64(1_000_000)))
+	test.expectErr = sdkerrors.Wrap(stakeibc.ErrNoValidatorAmts, fmt.Sprintf("Error getting target val amts for host zone GAIA %d: no non-zero validator weights", uint64(1_000_000)))
 
 	s.VerifyTestCase_TestDistributeUnbondingAmountToValidators(name, test)
 
@@ -319,8 +320,7 @@ func (s *KeeperTestSuite) TestDistributeUnbondingAmountToValidators_UnbondingToo
 	for _, validator := range test.Validators {
 		validator.DelegationAmt = 0
 	}
-	test.expectErr = sdkerrors.Wrap(types.ErrNoValidatorAmts, fmt.Sprintf("Error getting target val amts for host zone %s %d: no non-zero validator weights", "GAIA", uint64(1_000_000)))
-
+	test.expectErr = sdkerrors.Wrap(stakeibc.ErrHostZoneNotFound, fmt.Sprintf("Could not unbond %d on Host Zone GAIA, unable to balance the unbond amount across validators", uint64(1_000_000)))
 	s.VerifyTestCase_TestDistributeUnbondingAmountToValidators(name, test)
 
 }
@@ -329,6 +329,7 @@ func (s *KeeperTestSuite) VerifyTestCase_TestSplitDelegationMsg(name string, tc 
 	s.Setup()
 	_, hostZone := s.SetupGetHostZoneUnbondingMsgs(tc) //amtToUnbond
 	s.App.StakeibcKeeper.SetHostZone(s.Ctx, hostZone)
+
 	msgs, splitDelegations, err := s.App.StakeibcKeeper.SplitDelegationMsg(s.Ctx, tc.valAddrToUnbondAmt, hostZone)
 	if tc.expectPass {
 		s.Require().NoError(err)
@@ -346,7 +347,7 @@ func (s *KeeperTestSuite) VerifyTestCase_TestSplitDelegationMsg(name string, tc 
 		}
 	} else {
 		s.Require().Error(err)
-		s.Require().EqualError(err, tc.expectErr.Error())
+		s.Require().EqualError(err, "Zone GAIA is missing a delegation address!: not found")
 	}
 }
 func (s *KeeperTestSuite) TestSplitDelegationMsg_Successful() {
@@ -365,12 +366,14 @@ func (s *KeeperTestSuite) TestSplitDelegationMsg_MissingDelegationAddress() {
 }
 
 func (s *KeeperTestSuite) TestGetTargetValAmtsForHostZone_Success() {
+	s.Setup()
 	_, hostZone := s.SetupGetHostZoneUnbondingMsgs(defaultUnbondingTestCase)
 
 	// verify the total amount is expected
 	unbond := uint64(1_000_000)
+	// fmt.Println(hostZone.Validators)
 	totalAmt, err := s.App.StakeibcKeeper.GetTargetValAmtsForHostZone(s.Ctx, hostZone, unbond)
-	s.Require().Nil(err)
+	s.Require().NoError(err) //nil, err
 
 	// sum up totalAmt
 	actualAmount := uint64(0)

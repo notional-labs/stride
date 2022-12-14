@@ -166,7 +166,7 @@ func (k Keeper) DistributeUnbondingAmountToValidators(ctx sdk.Context, hostZone 
 		errMsg := fmt.Sprintf("Could not unbond %d on Host Zone %s, unable to balance the unbond amount across validators",
 			totalAmtToUnbond, hostZone.ChainId)
 		k.Logger(ctx).Error(errMsg)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, errMsg)
+		return nil, sdkerrors.Wrap(types.ErrHostZoneNotFound, errMsg)
 	}
 	return valAddrToUnbondAmt, nil
 }
@@ -401,11 +401,12 @@ func (k Keeper) SweepAllUnbondedTokensForHostZone(ctx sdk.Context, hostZone type
 }
 
 // Sends all unbonded tokens to the redemption account
-//    returns:
-//       * success indicator if all chains succeeded
-//       * list of successful chains
-//       * list of tokens swept
-//       * list of failed chains
+//
+//	returns:
+//	   * success indicator if all chains succeeded
+//	   * list of successful chains
+//	   * list of tokens swept
+//	   * list of failed chains
 func (k Keeper) SweepAllUnbondedTokens(ctx sdk.Context) (success bool, successfulSweeps []string, sweepAmounts []int64, failedSweeps []string) {
 	k.Logger(ctx).Info("Sweeping All Unbonded Tokens...")
 
