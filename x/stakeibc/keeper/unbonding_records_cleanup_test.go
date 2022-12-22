@@ -91,7 +91,8 @@ func (s *KeeperTestSuite) SetupCleanupEpochUnbondingRecords() CleanupEpochUnbond
 
 func (s *KeeperTestSuite) CleanupEpochUnbondingRecords_Successful() {
 	// successfully clean up epoch unbonding records
-	tc := s.SetupGetHostZoneUnbondingMsgs()
+	s.SetupGetHostZoneUnbondingMsgs(defaultUnbondingTestCase)
+	tc := defaultUnbondingTestCase
 	// clean up epoch unbonding record 0
 	success := s.App.StakeibcKeeper.CleanupEpochUnbondingRecords(s.Ctx, 0)
 	s.Require().True(success, "cleanup unbonding records returns true")
