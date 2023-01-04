@@ -8,9 +8,9 @@ import (
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	epochtypes "github.com/Stride-Labs/stride/v3/x/epochs/types"
-	icqtypes "github.com/Stride-Labs/stride/v3/x/interchainquery/types"
-	"github.com/Stride-Labs/stride/v3/x/stakeibc/types"
+	epochtypes "github.com/Stride-Labs/stride/v4/x/epochs/types"
+	icqtypes "github.com/Stride-Labs/stride/v4/x/interchainquery/types"
+	"github.com/Stride-Labs/stride/v4/x/stakeibc/types"
 )
 
 // DelegatorSharesCallback is a callback handler for UpdateValidatorSharesExchRate queries.
@@ -78,14 +78,14 @@ func DelegatorSharesCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 	// TODO: make sure conversion math precision matches the sdk's staking module's version (we did it slightly differently)
 	// note: truncateInt per https://github.com/cosmos/cosmos-sdk/blob/cb31043d35bad90c4daa923bb109f38fd092feda/x/staking/types/validator.go#L431
 	validatorTokens := queriedDelgation.Shares.Mul(validator.InternalExchangeRate.InternalTokensToSharesRate).TruncateInt()
-	k.Logger(ctx).Info(fmt.Sprintf("DelegationCallback: HostZone: %s, Validator: %s, Previous NumTokens: %d, Current NumTokens: %v",
+	k.Logger(ctx).Info(fmt.Sprintf("DelegationCallback: HostZone: %s, Validator: %s, Previous NumTokens: %v, Current NumTokens: %v",
 		hostZone.ChainId, validator.Address, validator.DelegationAmt, validatorTokens))
 
 	// Confirm the validator has actually been slashed
-	if validatorTokens.Uint64() == validator.DelegationAmt {
+	if validatorTokens.Equal(validator.DelegationAmt) {
 		k.Logger(ctx).Info(fmt.Sprintf("DelegationCallback: Validator (%s) was not slashed", validator.Address))
 		return nil
-	} else if validatorTokens.Uint64() > validator.DelegationAmt {
+	} else if validatorTokens.GT(validator.DelegationAmt) {
 		errMsg := fmt.Sprintf("DelegationCallback: Validator (%s) tokens returned from query is greater than the DelegationAmt", validator.Address)
 		k.Logger(ctx).Error(errMsg)
 		return fmt.Errorf("%s: invalid request", errMsg)
@@ -96,19 +96,8 @@ func DelegatorSharesCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 	// NOTE:  we assume any decrease in delegation amt that's not tracked via records is a slash
 
 	// Get slash percentage
-	delegationAmount, err := cast.ToInt64E(validator.DelegationAmt)
-	if err != nil {
-		errMsg := fmt.Sprintf("unable to convert validator delegation amount to int64, err: %s", err.Error())
-		k.Logger(ctx).Error(errMsg)
-		return fmt.Errorf("%s: %s", errMsg, types.ErrIntCast.Error())
-	}
-	slashAmountUInt := validator.DelegationAmt - validatorTokens.Uint64()
-	slashAmount, err := cast.ToInt64E(slashAmountUInt)
-	if err != nil {
-		errMsg := fmt.Sprintf("unable to convert validator slash amount to int64, err: %s", err.Error())
-		k.Logger(ctx).Error(errMsg)
-		return fmt.Errorf("%s: %s", errMsg, types.ErrIntCast.Error())
-	}
+	slashAmount := validator.DelegationAmt.Sub(validatorTokens)
+
 	weight, err := cast.ToInt64E(validator.Weight)
 	if err != nil {
 		errMsg := fmt.Sprintf("unable to convert validator weight to int64, err: %s", err.Error())
@@ -116,8 +105,8 @@ func DelegatorSharesCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 		return fmt.Errorf(`%s: %s`, errMsg, types.ErrIntCast.Error())
 	}
 
-	slashPct := sdk.NewDec(slashAmount).Quo(sdk.NewDec(delegationAmount))
-	k.Logger(ctx).Info(fmt.Sprintf("ICQ'd Delegation Amoount Mismatch, HostZone: %s, Validator: %s, Delegator: %s, Records Tokens: %d, Tokens from ICQ %v, Slash Amount: %d, Slash Pct: %v!",
+	slashPct := sdk.NewDecFromInt(slashAmount).Quo(sdk.NewDecFromInt(validator.DelegationAmt))
+	k.Logger(ctx).Info(fmt.Sprintf("ICQ'd Delegation Amount Mismatch, HostZone: %s, Validator: %s, Delegator: %s, Records Tokens: %v, Tokens from ICQ %v, Slash Amount: %v, Slash Pct: %v!",
 		hostZone.ChainId, validator.Address, queriedDelgation.DelegatorAddress, validator.DelegationAmt, validatorTokens, slashAmount, slashPct))
 
 	// Abort if the slash was greater than 10%
@@ -129,11 +118,11 @@ func DelegatorSharesCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 	}
 
 	// Update the host zone and validator to reflect the weight and delegation change
-	weightAdjustment := sdk.NewDec(validatorTokens.Int64()).Quo(sdk.NewDec(delegationAmount))
-	validator.Weight = sdk.NewDec(weight).Mul(weightAdjustment).TruncateInt().Uint64()
-	validator.DelegationAmt -= slashAmountUInt
+	weightAdjustment := sdk.NewDecFromInt(validatorTokens).Quo(sdk.NewDecFromInt(validator.DelegationAmt))
+	validator.Weight = sdk.NewDec(int64(weight)).Mul(weightAdjustment).TruncateInt().Uint64()
+	validator.DelegationAmt = validator.DelegationAmt.Sub(slashAmount)
 
-	hostZone.StakedBal -= slashAmountUInt
+	hostZone.StakedBal = hostZone.StakedBal.Sub(slashAmount)
 	hostZone.Validators[valIndex] = &validator
 	k.SetHostZone(ctx, hostZone)
 

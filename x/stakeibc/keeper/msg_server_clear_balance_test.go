@@ -8,8 +8,8 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
 	_ "github.com/stretchr/testify/suite"
 
-	"github.com/Stride-Labs/stride/v3/x/stakeibc/types"
-	stakeibctypes "github.com/Stride-Labs/stride/v3/x/stakeibc/types"
+	"github.com/Stride-Labs/stride/v4/x/stakeibc/types"
+	stakeibctypes "github.com/Stride-Labs/stride/v4/x/stakeibc/types"
 )
 
 type ClearBalanceState struct {
@@ -42,7 +42,7 @@ func (s *KeeperTestSuite) SetupClearBalance() ClearBalanceTestCase {
 		},
 	}
 
-	amount := uint64(1_000_000)
+	amount := sdk.NewInt(1_000_000)
 
 	user := Account{
 		acc: s.TestAccs[0],

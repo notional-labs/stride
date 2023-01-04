@@ -7,8 +7,8 @@ import (
 	ibctypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
 
-	"github.com/Stride-Labs/stride/v3/x/records/types"
-	recordtypes "github.com/Stride-Labs/stride/v3/x/records/types"
+	"github.com/Stride-Labs/stride/v4/x/records/types"
+	recordtypes "github.com/Stride-Labs/stride/v4/x/records/types"
 )
 
 type TransferTestCase struct {
@@ -18,7 +18,7 @@ type TransferTestCase struct {
 
 func (s *KeeperTestSuite) SetupTransfer() TransferTestCase {
 	s.CreateTransferChannel(chainId)
-	balanceToTransfer := int64(1_000_000)
+	balanceToTransfer := sdk.NewInt(1_000_000)
 	depositRecord := types.DepositRecord{
 		Id:                 1,
 		DepositEpochNumber: 1,
@@ -27,7 +27,7 @@ func (s *KeeperTestSuite) SetupTransfer() TransferTestCase {
 		Status:             types.DepositRecord_TRANSFER_QUEUE,
 	}
 	s.App.RecordsKeeper.SetDepositRecord(s.Ctx, depositRecord)
-	coin := sdk.NewCoin("tokens", sdk.NewInt(balanceToTransfer))
+	coin := sdk.NewCoin("tokens", balanceToTransfer)
 	s.FundAccount(s.TestAccs[0], coin)
 	transferMsg := ibctypes.MsgTransfer{
 		SourcePort:    "transfer",

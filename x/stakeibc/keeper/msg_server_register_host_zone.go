@@ -6,9 +6,9 @@ import (
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	epochtypes "github.com/Stride-Labs/stride/v3/x/epochs/types"
-	recordstypes "github.com/Stride-Labs/stride/v3/x/records/types"
-	"github.com/Stride-Labs/stride/v3/x/stakeibc/types"
+	epochtypes "github.com/Stride-Labs/stride/v4/x/epochs/types"
+	recordstypes "github.com/Stride-Labs/stride/v4/x/records/types"
+	"github.com/Stride-Labs/stride/v4/x/stakeibc/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -126,15 +126,16 @@ func (k msgServer) RegisterHostZone(goCtx context.Context, msg *types.MsgRegiste
 		return nil, fmt.Errorf("%s: %s", errMsg, recordstypes.ErrEpochUnbondingRecordNotFound.Error())
 	}
 	hostZoneUnbonding := &recordstypes.HostZoneUnbonding{
-		NativeTokenAmount: 0,
-		StTokenAmount:     0,
+		NativeTokenAmount: sdk.ZeroInt(),
+		StTokenAmount:     sdk.ZeroInt(),
 		Denom:             zone.HostDenom,
 		HostZoneId:        zone.ChainId,
 		Status:            recordstypes.HostZoneUnbonding_UNBONDING_QUEUE,
 	}
 	updatedEpochUnbondingRecord, success := k.RecordsKeeper.AddHostZoneToEpochUnbondingRecord(ctx, epochUnbondingRecord.EpochNumber, chainId, hostZoneUnbonding)
 	if !success {
-		errMsg := fmt.Sprintf("Failed to set host zone epoch unbonding record: epochNumber %d, chainId %s, hostZoneUnbonding %v. Err: %s", epochUnbondingRecord.EpochNumber, chainId, hostZoneUnbonding, err.Error())
+		errMsg := fmt.Sprintf("Failed to set host zone epoch unbonding record: epochNumber %d, chainId %s, hostZoneUnbonding %v. Err: %s",
+			epochUnbondingRecord.EpochNumber, chainId, hostZoneUnbonding, err.Error())
 		k.Logger(ctx).Error(errMsg)
 		return nil, fmt.Errorf("%s: %s", errMsg, types.ErrEpochNotFound.Error())
 	}
@@ -147,7 +148,7 @@ func (k msgServer) RegisterHostZone(goCtx context.Context, msg *types.MsgRegiste
 	}
 	depositRecord := recordstypes.DepositRecord{
 		Id:                 0,
-		Amount:             0,
+		Amount:             sdk.ZeroInt(),
 		Denom:              zone.HostDenom,
 		HostZoneId:         zone.ChainId,
 		Status:             recordstypes.DepositRecord_TRANSFER_QUEUE,

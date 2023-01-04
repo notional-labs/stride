@@ -6,14 +6,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 
-	"github.com/Stride-Labs/stride/v3/utils"
+	"github.com/Stride-Labs/stride/v4/utils"
 )
 
 const TypeMsgClearBalance = "clear_balance"
 
 var _ sdk.Msg = &MsgClearBalance{}
 
-func NewMsgClearBalance(creator string, chainId string, amount uint64, channelId string) *MsgClearBalance {
+func NewMsgClearBalance(creator string, chainId string, amount sdk.Int, channelId string) *MsgClearBalance {
 	return &MsgClearBalance{
 		Creator: creator,
 		ChainId: chainId,
@@ -55,7 +55,8 @@ func (msg *MsgClearBalance) ValidateBasic() error {
 	if len(msg.ChainId) == 0 {
 		return fmt.Errorf("chainid is required: invalid request")
 	}
-	if msg.Amount <= 0 {
+
+	if msg.Amount.LTE(sdk.ZeroInt()) {
 		return fmt.Errorf("amount must be greater than 0: invalid request")
 	}
 	if isValid := channeltypes.IsValidChannelID(msg.Channel); !isValid {

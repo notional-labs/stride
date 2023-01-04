@@ -2,36 +2,33 @@ package keeper
 
 import (
 	"fmt"
-	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
 	"github.com/spf13/cast"
 
-	"github.com/Stride-Labs/stride/v3/utils"
-	recordstypes "github.com/Stride-Labs/stride/v3/x/records/types"
-	"github.com/Stride-Labs/stride/v3/x/stakeibc/types"
+	"github.com/Stride-Labs/stride/v4/utils"
+	recordstypes "github.com/Stride-Labs/stride/v4/x/records/types"
+	"github.com/Stride-Labs/stride/v4/x/stakeibc/types"
 )
 
 func (k Keeper) CreateDepositRecordsForEpoch(ctx sdk.Context, epochNumber uint64) {
-	// Create one new deposit record / host zone for the next epoch
-	createDepositRecords := func(ctx sdk.Context, index int64, zoneInfo types.HostZone) error {
-		k.Logger(ctx).Info(fmt.Sprintf("createDepositRecords, index: %d, zoneInfo: %s", index, zoneInfo.ConnectionId))
+	k.Logger(ctx).Info(fmt.Sprintf("Creating Deposit Records for Epoch %d", epochNumber))
+
+	for _, hostZone := range k.GetAllHostZone(ctx) {
+		k.Logger(ctx).Info(utils.LogWithHostZone(hostZone.ChainId, "Creating Deposit Record"))
+
 		depositRecord := recordstypes.DepositRecord{
-			Id:                 0,
-			Amount:             0,
-			Denom:              zoneInfo.HostDenom,
-			HostZoneId:         zoneInfo.ChainId,
+			Amount:             sdk.ZeroInt(),
+			Denom:              hostZone.HostDenom,
+			HostZoneId:         hostZone.ChainId,
 			Status:             recordstypes.DepositRecord_TRANSFER_QUEUE,
 			DepositEpochNumber: epochNumber,
 		}
 		k.RecordsKeeper.AppendDepositRecord(ctx, depositRecord)
-		return nil
 	}
-	k.IterateHostZones(ctx, createDepositRecords)
 }
-
 func (k Keeper) TransferExistingDepositsToHostZones(ctx sdk.Context, epochNumber uint64, depositRecords []recordstypes.DepositRecord) {
 	transferDepositRecords := utils.FilterDepositRecords(depositRecords, func(record recordstypes.DepositRecord) (condition bool) {
 		isTransferRecord := record.Status == recordstypes.DepositRecord_TRANSFER_QUEUE
@@ -42,12 +39,12 @@ func (k Keeper) TransferExistingDepositsToHostZones(ctx sdk.Context, epochNumber
 	ibcTransferTimeoutNanos := k.GetParam(ctx, types.KeyIBCTransferTimeoutNanos)
 
 	for _, depositRecord := range transferDepositRecords {
-		pstr := fmt.Sprintf("\t[TransferExistingDepositsToHostZones] Processing deposits {%d} {%s} {%d}", depositRecord.Id, depositRecord.Denom, depositRecord.Amount)
-		k.Logger(ctx).Info(pstr)
+		k.Logger(ctx).Info(utils.LogWithHostZone(depositRecord.HostZoneId,
+			"Processing deposit record %d: %v%s", depositRecord.Id, depositRecord.Amount, depositRecord.Denom))
 
 		// if a TRANSFER_QUEUE record has 0 balance and was created in the previous epoch, it's safe to remove since it will never be updated or used
-		if depositRecord.Amount <= 0 && depositRecord.DepositEpochNumber < epochNumber {
-			k.Logger(ctx).Info("[TransferExistingDepositsToHostZones] Empty deposit record (ID: %s)! Removing.", depositRecord.Id)
+		if depositRecord.Amount.LTE(sdk.ZeroInt()) && depositRecord.DepositEpochNumber < epochNumber {
+			k.Logger(ctx).Info(utils.LogWithHostZone(depositRecord.HostZoneId, "Empty deposit record - Removing."))
 			k.RecordsKeeper.RemoveDepositRecord(ctx, depositRecord.Id)
 			continue
 		}
@@ -66,7 +63,9 @@ func (k Keeper) TransferExistingDepositsToHostZones(ctx sdk.Context, epochNumber
 		}
 		delegateAddress := delegateAccount.GetAddress()
 
-		transferCoin := sdk.NewCoin(hostZone.GetIbcDenom(), sdk.NewInt(depositRecord.Amount))
+		k.Logger(ctx).Info(utils.LogWithHostZone(depositRecord.HostZoneId, "Transferring %v%s", depositRecord.Amount, hostZone.HostDenom))
+		transferCoin := sdk.NewCoin(hostZone.IbcDenom, depositRecord.Amount)
+
 		// timeout 30 min in the future
 		// NOTE: this assumes no clock drift between chains, which tendermint guarantees
 		// if we onboard non-tendermint chains, we need to use the time on the host chain to
@@ -99,8 +98,8 @@ func (k Keeper) StakeExistingDepositsOnHostZones(ctx sdk.Context, epochNumber ui
 	k.Logger(ctx).Info(fmt.Sprintf("Staking %d out of %d deposit records", maxDepositRecordsToStake, len(stakeDepositRecords)))
 
 	for _, depositRecord := range stakeDepositRecords[:maxDepositRecordsToStake] {
-		k.Logger(ctx).Info(fmt.Sprintf("\t[StakeExistingDepositsOnHostZones] Processing deposit ID:{%d} DENOM:{%s} AMT:{%d}",
-			depositRecord.Id, depositRecord.Denom, depositRecord.Amount))
+		k.Logger(ctx).Info(utils.LogWithHostZone(depositRecord.HostZoneId,
+			"Processing deposit record %d: %v%s", depositRecord.Id, depositRecord.Amount, depositRecord.Denom))
 
 		hostZone, hostZoneFound := k.GetHostZone(ctx, depositRecord.HostZoneId)
 		if !hostZoneFound {
@@ -114,8 +113,8 @@ func (k Keeper) StakeExistingDepositsOnHostZones(ctx sdk.Context, epochNumber ui
 			continue
 		}
 
-		k.Logger(ctx).Info(fmt.Sprintf("\t[StakeExistingDepositsOnHostZones] Staking %d on %s", depositRecord.Amount, hostZone.HostDenom))
-		stakeAmount := sdk.NewCoin(hostZone.HostDenom, sdk.NewInt(depositRecord.Amount))
+		k.Logger(ctx).Info(utils.LogWithHostZone(depositRecord.HostZoneId, "Staking %v%s", depositRecord.Amount, hostZone.HostDenom))
+		stakeAmount := sdk.NewCoin(hostZone.HostDenom, depositRecord.Amount)
 
 		err := k.DelegateOnHost(ctx, hostZone, stakeAmount, depositRecord)
 		if err != nil {
@@ -129,7 +128,7 @@ func (k Keeper) StakeExistingDepositsOnHostZones(ctx sdk.Context, epochNumber ui
 			sdk.NewEvent(
 				sdk.EventTypeMessage,
 				sdk.NewAttribute("hostZone", hostZone.ChainId),
-				sdk.NewAttribute("newAmountStaked", strconv.FormatInt(depositRecord.Amount, 10)),
+				sdk.NewAttribute("newAmountStaked", depositRecord.Amount.String()),
 			),
 		)
 	}

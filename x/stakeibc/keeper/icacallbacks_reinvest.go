@@ -3,11 +3,11 @@ package keeper
 import (
 	"fmt"
 
-	epochtypes "github.com/Stride-Labs/stride/v3/x/epochs/types"
-	"github.com/Stride-Labs/stride/v3/x/icacallbacks"
-	icacallbackstypes "github.com/Stride-Labs/stride/v3/x/icacallbacks/types"
-	recordstypes "github.com/Stride-Labs/stride/v3/x/records/types"
-	"github.com/Stride-Labs/stride/v3/x/stakeibc/types"
+	epochtypes "github.com/Stride-Labs/stride/v4/x/epochs/types"
+	"github.com/Stride-Labs/stride/v4/x/icacallbacks"
+	icacallbackstypes "github.com/Stride-Labs/stride/v4/x/icacallbacks/types"
+	recordstypes "github.com/Stride-Labs/stride/v4/x/records/types"
+	"github.com/Stride-Labs/stride/v4/x/stakeibc/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
@@ -69,7 +69,7 @@ func ReinvestCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, ack
 	epochNumber := strideEpochTracker.EpochNumber
 	// create a new record so that rewards are reinvested
 	record := recordstypes.DepositRecord{
-		Amount:             amount.Int64(),
+		Amount:             amount,
 		Denom:              denom,
 		HostZoneId:         reinvestCallback.HostZoneId,
 		Status:             recordstypes.DepositRecord_DELEGATION_QUEUE,

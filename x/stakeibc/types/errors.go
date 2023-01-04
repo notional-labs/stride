@@ -49,4 +49,6 @@ var (
 	ErrMaxNumValidators                  = fmt.Errorf("max number of validators reached")
 	ErrKeyNotFound                       = fmt.Errorf("key not found")
 	ErrInvalidAddress                    = fmt.Errorf("invalid address")
+	ErrUndelegationAmount                = fmt.Errorf("Undelegation amount is greater than stakedBal")
+	ErrInvalidRequest                    = fmt.Errorf("invalid request")
 )

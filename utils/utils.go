@@ -11,8 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 
-	config "github.com/Stride-Labs/stride/v3/cmd/strided/config"
-	recordstypes "github.com/Stride-Labs/stride/v3/x/records/types"
+	config "github.com/Stride-Labs/stride/v4/cmd/strided/config"
+	recordstypes "github.com/Stride-Labs/stride/v4/x/records/types"
 )
 
 func FilterDepositRecords(arr []recordstypes.DepositRecord, condition func(recordstypes.DepositRecord) bool) (ret []recordstypes.DepositRecord) {
@@ -42,7 +42,7 @@ func Min(a int, b int) int {
 	return b
 }
 
-func HostZoneUnbondingKeys(m map[string]*recordstypes.HostZoneUnbonding) []string {
+func StringMapKeys[V any](m map[string]V) []string {
 	keys := make([]string, 0, len(m))
 	for k := range m {
 		keys = append(keys, k)
@@ -51,30 +51,12 @@ func HostZoneUnbondingKeys(m map[string]*recordstypes.HostZoneUnbonding) []strin
 	return keys
 }
 
-func StringToIntMapKeys(m map[string]int64) []string {
-	keys := make([]string, 0, len(m))
+func Int32MapKeys[V any](m map[int32]V) []int32 {
+	keys := make([]int32, 0, len(m))
 	for k := range m {
 		keys = append(keys, k)
 	}
-	sort.Strings(keys)
-	return keys
-}
-
-func StringToStringMapKeys(m map[string]string) []string {
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
-}
-
-func StringToStringSliceMapKeys(m map[string][]string) []string {
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
+	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
 	return keys
 }
 
@@ -218,4 +200,28 @@ func ConvertAddressToStrideAddress(address string) string {
 	}
 
 	return bech32Addr
+}
+
+// Returns a log string with a tab and chainId as the prefix
+// Ex:
+//
+//	| COSMOSHUB-4   |   string
+func LogWithHostZone(chainId string, s string, a ...any) string {
+	msg := fmt.Sprintf(s, a...)
+	return fmt.Sprintf("|   %-13s |  %s", strings.ToUpper(chainId), msg)
+}
+
+// Returns a log header string with a dash padding on either side
+// Ex:
+//
+//	------------------------------ string ------------------------------
+func LogHeader(s string, a ...any) string {
+	lineLength := 120
+	header := fmt.Sprintf(s, a...)
+	pad := strings.Repeat("-", (lineLength-len(header))/2)
+	return fmt.Sprintf("%s %s %s", pad, header, pad)
+}
+func LogCallbackWithHostZone(chainId string, callbackId string, s string, a ...any) string {
+	msg := fmt.Sprintf(s, a...)
+	return fmt.Sprintf("|   %-13s |  %s CALLBACK  |  %s", strings.ToUpper(chainId), strings.ToUpper(callbackId), msg)
 }

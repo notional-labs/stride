@@ -6,16 +6,16 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	_ "github.com/stretchr/testify/suite"
 
-	epochtypes "github.com/Stride-Labs/stride/v3/x/epochs/types"
+	epochtypes "github.com/Stride-Labs/stride/v4/x/epochs/types"
 
-	recordtypes "github.com/Stride-Labs/stride/v3/x/records/types"
-	stakeibckeeper "github.com/Stride-Labs/stride/v3/x/stakeibc/keeper"
-	"github.com/Stride-Labs/stride/v3/x/stakeibc/types"
-	stakeibc "github.com/Stride-Labs/stride/v3/x/stakeibc/types"
+	recordtypes "github.com/Stride-Labs/stride/v4/x/records/types"
+	stakeibckeeper "github.com/Stride-Labs/stride/v4/x/stakeibc/keeper"
+	"github.com/Stride-Labs/stride/v4/x/stakeibc/types"
+	stakeibc "github.com/Stride-Labs/stride/v4/x/stakeibc/types"
 )
 
 type ReinvestCallbackState struct {
-	reinvestAmt   int64
+	reinvestAmt   sdk.Int
 	callbackArgs  types.ReinvestCallback
 	depositRecord recordtypes.DepositRecord
 }
@@ -32,7 +32,7 @@ type ReinvestCallbackTestCase struct {
 }
 
 func (s *KeeperTestSuite) SetupReinvestCallback() ReinvestCallbackTestCase {
-	reinvestAmt := int64(1_000)
+	reinvestAmt := sdk.NewInt(1_000)
 
 	hostZone := stakeibc.HostZone{
 		ChainId:        HostChainId,
@@ -61,7 +61,7 @@ func (s *KeeperTestSuite) SetupReinvestCallback() ReinvestCallbackTestCase {
 	ack := s.ICAPacketAcknowledgement(msgs, nil)
 	callbackArgs := types.ReinvestCallback{
 		HostZoneId:     HostChainId,
-		ReinvestAmount: sdk.NewCoin(Atom, sdk.NewInt(reinvestAmt)),
+		ReinvestAmount: sdk.NewCoin(Atom, reinvestAmt),
 	}
 	args, err := s.App.StakeibcKeeper.MarshalReinvestCallbackArgs(s.Ctx, callbackArgs)
 	s.Require().NoError(err)

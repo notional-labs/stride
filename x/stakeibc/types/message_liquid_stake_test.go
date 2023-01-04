@@ -3,9 +3,10 @@ package types
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/Stride-Labs/stride/v3/testutil/sample"
+	"github.com/Stride-Labs/stride/v4/testutil/sample"
 )
 
 func TestMsgLiquidStake_ValidateBasic(t *testing.T) {
@@ -18,7 +19,7 @@ func TestMsgLiquidStake_ValidateBasic(t *testing.T) {
 			name: "invalid address",
 			msg: MsgLiquidStake{
 				Creator:   "invalid_address",
-				Amount:    1,
+				Amount:    sdk.NewInt(1),
 				HostDenom: "uatom",
 			},
 			err: ErrInvalidAddress,
@@ -27,7 +28,7 @@ func TestMsgLiquidStake_ValidateBasic(t *testing.T) {
 			name: "invalid address: wrong chain's bech32prefix",
 			msg: MsgLiquidStake{
 				Creator:   "osmo1yjq0n2ewufluenyyvj2y9sead9jfstpxnqv2xz",
-				Amount:    1,
+				Amount:    sdk.NewInt(1),
 				HostDenom: "uatom",
 			},
 			err: ErrInvalidAddress,
@@ -36,7 +37,7 @@ func TestMsgLiquidStake_ValidateBasic(t *testing.T) {
 			name: "valid inputs",
 			msg: MsgLiquidStake{
 				Creator:   sample.AccAddress(),
-				Amount:    1,
+				Amount:    sdk.NewInt(1),
 				HostDenom: "uatom",
 			},
 		},
@@ -44,7 +45,7 @@ func TestMsgLiquidStake_ValidateBasic(t *testing.T) {
 			name: "zero amount",
 			msg: MsgLiquidStake{
 				Creator:   sample.AccAddress(),
-				Amount:    0,
+				Amount:    sdk.ZeroInt(),
 				HostDenom: "uatom",
 			},
 			err: ErrInvalidAmount,
@@ -53,7 +54,7 @@ func TestMsgLiquidStake_ValidateBasic(t *testing.T) {
 			name: "empty host denom",
 			msg: MsgLiquidStake{
 				Creator:   sample.AccAddress(),
-				Amount:    1,
+				Amount:    sdk.NewInt(1),
 				HostDenom: "",
 			},
 			err: ErrRequiredFieldEmpty,
@@ -76,7 +77,7 @@ func TestMsgLiquidStake_ValidateBasic(t *testing.T) {
 
 func TestMsgLiquidStake_GetSignBytes(t *testing.T) {
 	addr := "cosmos1v9jxgu33kfsgr5"
-	msg := NewMsgLiquidStake(addr, 1000, "ustrd")
+	msg := NewMsgLiquidStake(addr, sdk.NewInt(1000), "ustrd")
 	res := msg.GetSignBytes()
 
 	expected := `{"type":"stakeibc/LiquidStake","value":{"amount":"1000","creator":"cosmos1v9jxgu33kfsgr5","host_denom":"ustrd"}}`

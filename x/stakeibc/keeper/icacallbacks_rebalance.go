@@ -3,9 +3,9 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/Stride-Labs/stride/v3/x/icacallbacks"
-	icacallbackstypes "github.com/Stride-Labs/stride/v3/x/icacallbacks/types"
-	"github.com/Stride-Labs/stride/v3/x/stakeibc/types"
+	"github.com/Stride-Labs/stride/v4/x/icacallbacks"
+	icacallbackstypes "github.com/Stride-Labs/stride/v4/x/icacallbacks/types"
+	"github.com/Stride-Labs/stride/v4/x/stakeibc/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
@@ -74,14 +74,14 @@ func RebalanceCallback(k Keeper, ctx sdk.Context, packet channeltypes.Packet, ac
 	for _, rebalancing := range rebalancings {
 		srcValidator := rebalancing.GetSrcValidator()
 		dstValidator := rebalancing.GetDstValidator()
-		amt := rebalancing.GetAmt()
+		amt := rebalancing.Amt
 		if _, valFound := valAddrMap[srcValidator]; valFound {
-			valAddrMap[srcValidator].DelegationAmt -= amt
+			valAddrMap[srcValidator].DelegationAmt = valAddrMap[srcValidator].DelegationAmt.Sub(amt)
 		} else {
 			return fmt.Errorf("validator not found %s: invalid request", srcValidator)
 		}
 		if _, valFound := valAddrMap[dstValidator]; valFound {
-			valAddrMap[dstValidator].DelegationAmt += amt
+			valAddrMap[dstValidator].DelegationAmt = valAddrMap[dstValidator].DelegationAmt.Add(amt)
 		} else {
 			return fmt.Errorf("validator not found %s: invalid request", dstValidator)
 		}

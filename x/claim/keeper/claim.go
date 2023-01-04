@@ -6,15 +6,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Stride-Labs/stride/v3/utils"
-	"github.com/Stride-Labs/stride/v3/x/claim/types"
-	vestingtypes "github.com/Stride-Labs/stride/v3/x/claim/vesting/types"
-	epochstypes "github.com/Stride-Labs/stride/v3/x/epochs/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authvestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/gogo/protobuf/proto"
+
+	"github.com/Stride-Labs/stride/v4/utils"
+	"github.com/Stride-Labs/stride/v4/x/claim/types"
+	vestingtypes "github.com/Stride-Labs/stride/v4/x/claim/vesting/types"
+	epochstypes "github.com/Stride-Labs/stride/v4/x/epochs/types"
 )
 
 func (k Keeper) LoadAllocationData(ctx sdk.Context, allocationData string) bool {
@@ -217,7 +218,9 @@ func (k Keeper) SetClaimRecordsWithWeights(ctx sdk.Context, claimRecords []types
 		weights[record.AirdropIdentifier] = weights[record.AirdropIdentifier].Add(record.Weight)
 	}
 
-	for identifier, weight := range weights {
+	// DO NOT REMOVE: StringMapKeys fixes non-deterministic map iteration
+	for _, identifier := range utils.StringMapKeys(weights) {
+		weight := weights[identifier]
 		k.SetTotalWeight(ctx, weight, identifier)
 	}
 
@@ -379,7 +382,7 @@ func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, addr sdk.AccAddress
 		return sdk.Coins{}, err
 	}
 
-	poolBal := distributorAccountBalance.AddAmount(sdk.NewInt(airdrop.ClaimedSoFar))
+	poolBal := distributorAccountBalance.AddAmount(airdrop.ClaimedSoFar)
 
 	claimableAmount := poolBal.Amount.ToDec().
 		Mul(percentageForAction).
@@ -418,7 +421,7 @@ func (k Keeper) GetUserTotalClaimable(ctx sdk.Context, addr sdk.AccAddress, aird
 
 	totalClaimable := sdk.Coins{}
 
-	for action := range types.Action_name {
+	for action := range utils.Int32MapKeys(types.Action_name) {
 		claimableForAction, err := k.GetClaimableAmountForAction(ctx, addr, types.Action(action), airdropIdentifier, includeClaimed)
 		if err != nil {
 			return sdk.Coins{}, err
@@ -448,7 +451,7 @@ func (k Keeper) GetAirdropIdentifiersForUser(ctx sdk.Context, addr sdk.AccAddres
 	return identifiers
 }
 
-func (k Keeper) AfterClaim(ctx sdk.Context, airdropIdentifier string, claimAmount int64) error {
+func (k Keeper) AfterClaim(ctx sdk.Context, airdropIdentifier string, claimAmount sdk.Int) error {
 	// Increment ClaimedSoFar on the airdrop record
 	// fetch the airdrop
 	airdrop := k.GetAirdropByIdentifier(ctx, airdropIdentifier)
@@ -560,7 +563,7 @@ func (k Keeper) ClaimCoinsForAction(ctx sdk.Context, addr sdk.AccAddress, action
 	if airdrop == nil {
 		return nil, fmt.Errorf("Invalid airdrop identifier: ClaimCoinsForAction: invalid request")
 	}
-	err = k.AfterClaim(ctx, airdropIdentifier, claimableAmount.AmountOf(airdrop.ClaimDenom).Int64())
+	err = k.AfterClaim(ctx, airdropIdentifier, claimableAmount.AmountOf(airdrop.ClaimDenom))
 	if err != nil {
 		return nil, err
 	}
@@ -611,20 +614,20 @@ func (k Keeper) CreateAirdropAndEpoch(ctx sdk.Context, distributor string, denom
 }
 
 // IncrementClaimedSoFar increments ClaimedSoFar for a single airdrop
-func (k Keeper) IncrementClaimedSoFar(ctx sdk.Context, identifier string, amount int64) error {
+func (k Keeper) IncrementClaimedSoFar(ctx sdk.Context, identifier string, amount sdk.Int) error {
 	params, err := k.GetParams(ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	if amount < 0 {
+	if amount.LT(sdk.ZeroInt()) {
 		return types.ErrInvalidAmount
 	}
 
 	newAirdrops := []*types.Airdrop{}
 	for _, airdrop := range params.Airdrops {
 		if airdrop.AirdropIdentifier == identifier {
-			airdrop.ClaimedSoFar += amount
+			airdrop.ClaimedSoFar = airdrop.ClaimedSoFar.Add(amount)
 		}
 		newAirdrops = append(newAirdrops, airdrop)
 	}
@@ -641,7 +644,7 @@ func (k Keeper) ResetClaimedSoFar(ctx sdk.Context) error {
 
 	newAirdrops := []*types.Airdrop{}
 	for _, airdrop := range params.Airdrops {
-		airdrop.ClaimedSoFar = 0
+		airdrop.ClaimedSoFar = sdk.ZeroInt()
 		newAirdrops = append(newAirdrops, airdrop)
 	}
 	params.Airdrops = newAirdrops

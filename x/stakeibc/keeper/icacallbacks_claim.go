@@ -3,10 +3,10 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/Stride-Labs/stride/v3/x/icacallbacks"
-	icacallbackstypes "github.com/Stride-Labs/stride/v3/x/icacallbacks/types"
-	recordstypes "github.com/Stride-Labs/stride/v3/x/records/types"
-	"github.com/Stride-Labs/stride/v3/x/stakeibc/types"
+	"github.com/Stride-Labs/stride/v4/x/icacallbacks"
+	icacallbackstypes "github.com/Stride-Labs/stride/v4/x/icacallbacks/types"
+	recordstypes "github.com/Stride-Labs/stride/v4/x/records/types"
+	"github.com/Stride-Labs/stride/v4/x/stakeibc/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
@@ -87,7 +87,7 @@ func (k Keeper) DecrementHostZoneUnbonding(ctx sdk.Context, userRedemptionRecord
 		return fmt.Errorf("host zone unbonding not found %s: %s", callbackArgs.ChainId, types.ErrRecordNotFound.Error())
 	}
 	// decrement the hzu by the amount claimed
-	hostZoneUnbonding.NativeTokenAmount = hostZoneUnbonding.NativeTokenAmount - userRedemptionRecord.Amount
+	hostZoneUnbonding.NativeTokenAmount = hostZoneUnbonding.NativeTokenAmount.Sub(userRedemptionRecord.Amount)
 	// save the updated hzu on the epoch unbonding record
 	epochUnbondingRecord, success := k.RecordsKeeper.AddHostZoneToEpochUnbondingRecord(ctx, callbackArgs.EpochNumber, callbackArgs.ChainId, hostZoneUnbonding)
 	if !success {

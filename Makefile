@@ -120,6 +120,9 @@ build-docker:
 start-docker: build-docker
 	@bash scripts/start_network.sh 
 
+start-docker-all: build-docker
+	@ALL_HOST_CHAINS=true bash $(DOCKERNET_HOME)/start_network.sh 
+
 clean-docker: 
 	@docker-compose stop
 	@docker-compose down

@@ -11,10 +11,10 @@ import (
 
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 
-	epochtypes "github.com/Stride-Labs/stride/v3/x/epochs/types"
-	recordstypes "github.com/Stride-Labs/stride/v3/x/records/types"
-	recordtypes "github.com/Stride-Labs/stride/v3/x/records/types"
-	stakeibctypes "github.com/Stride-Labs/stride/v3/x/stakeibc/types"
+	epochtypes "github.com/Stride-Labs/stride/v4/x/epochs/types"
+	recordstypes "github.com/Stride-Labs/stride/v4/x/records/types"
+	recordtypes "github.com/Stride-Labs/stride/v4/x/records/types"
+	stakeibctypes "github.com/Stride-Labs/stride/v4/x/stakeibc/types"
 )
 
 type RegisterHostZoneTestCase struct {
@@ -129,7 +129,7 @@ func (s *KeeperTestSuite) TestRegisterHostZone_Success() {
 	// Confirm host zone unbonding was added
 	hostZoneUnbonding := epochUnbondingRecord.HostZoneUnbondings[0]
 	s.Require().Equal(HostChainId, hostZoneUnbonding.HostZoneId, "host zone unbonding set for this host zone")
-	s.Require().Equal(uint64(0), hostZoneUnbonding.NativeTokenAmount, "host zone unbonding set to 0 tokens")
+	s.Require().Equal(sdk.ZeroInt(), hostZoneUnbonding.NativeTokenAmount, "host zone unbonding set to 0 tokens")
 	s.Require().Equal(recordstypes.HostZoneUnbonding_UNBONDING_QUEUE, hostZoneUnbonding.Status, "host zone unbonding set to bonded")
 
 	// Confirm a module account was created
@@ -141,7 +141,7 @@ func (s *KeeperTestSuite) TestRegisterHostZone_Success() {
 	// Confirm an empty deposit record was created
 	expectedDepositRecord := recordstypes.DepositRecord{
 		Id:                 uint64(0),
-		Amount:             int64(0),
+		Amount:             sdk.ZeroInt(),
 		HostZoneId:         hostZone.ChainId,
 		Denom:              hostZone.HostDenom,
 		Status:             recordstypes.DepositRecord_TRANSFER_QUEUE,
