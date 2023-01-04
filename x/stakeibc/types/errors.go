@@ -51,4 +51,5 @@ var (
 	ErrInvalidAddress                    = fmt.Errorf("invalid address")
 	ErrUndelegationAmount                = fmt.Errorf("Undelegation amount is greater than stakedBal")
 	ErrInvalidRequest                    = fmt.Errorf("invalid request")
+	ErrInvalidType                       = fmt.Errorf("invalid type")
 )
