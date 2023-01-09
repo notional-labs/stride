@@ -127,14 +127,19 @@ func (k msgServer) RegisterHostZone(goCtx context.Context, msg *types.MsgRegiste
 		return nil, sdkerrors.Wrapf(recordstypes.ErrEpochUnbondingRecordNotFound, errMsg)
 	}
 	hostZoneUnbonding := &recordstypes.HostZoneUnbonding{
-		NativeTokenAmount: 0,
-		StTokenAmount:     0,
+		NativeTokenAmount: sdk.ZeroInt(),
+		StTokenAmount:     sdk.ZeroInt(),
 		Denom:             zone.HostDenom,
 		HostZoneId:        zone.ChainId,
 		Status:            recordstypes.HostZoneUnbonding_UNBONDING_QUEUE,
 	}
-	//the only case for it to not being able to add it's when GetEpochUnbondingRecord return nil. Which is checked by the line above. so no need to check for err in the below line.
-	updatedEpochUnbondingRecord, _ := k.RecordsKeeper.AddHostZoneToEpochUnbondingRecord(ctx, epochUnbondingRecord.EpochNumber, chainId, hostZoneUnbonding)
+	updatedEpochUnbondingRecord, success := k.RecordsKeeper.AddHostZoneToEpochUnbondingRecord(ctx, epochUnbondingRecord.EpochNumber, chainId, hostZoneUnbonding)
+	if !success {
+		errMsg := fmt.Sprintf("Failed to set host zone epoch unbonding record: epochNumber %d, chainId %s, hostZoneUnbonding %v. Err: %s",
+			epochUnbondingRecord.EpochNumber, chainId, hostZoneUnbonding, err.Error())
+		k.Logger(ctx).Error(errMsg)
+		return nil, sdkerrors.Wrapf(types.ErrEpochNotFound, errMsg)
+	}
 	k.RecordsKeeper.SetEpochUnbondingRecord(ctx, *updatedEpochUnbondingRecord)
 
 	// create an empty deposit record for the host zone
@@ -144,7 +149,7 @@ func (k msgServer) RegisterHostZone(goCtx context.Context, msg *types.MsgRegiste
 	}
 	depositRecord := recordstypes.DepositRecord{
 		Id:                 0,
-		Amount:             0,
+		Amount:             sdk.ZeroInt(),
 		Denom:              zone.HostDenom,
 		HostZoneId:         zone.ChainId,
 		Status:             recordstypes.DepositRecord_TRANSFER_QUEUE,

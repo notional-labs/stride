@@ -5,6 +5,7 @@ import (
 
 	recordtypes "github.com/Stride-Labs/stride/v4/x/records/types"
 	stakeibc "github.com/Stride-Labs/stride/v4/x/stakeibc/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (s *KeeperTestSuite) SetupSubmitHostZoneUnbondingMsg(hostZoneUnbonding recordtypes.HostZoneUnbonding) {
@@ -16,12 +17,12 @@ func (s *KeeperTestSuite) SetupSubmitHostZoneUnbondingMsg(hostZoneUnbonding reco
 	gaiaValidators := []*stakeibc.Validator{
 		{
 			Address:       gaiaValAddr,
-			DelegationAmt: uint64(5_000_000),
+			DelegationAmt: sdk.NewIntFromUint64(5_000_000),
 			Weight:        uint64(10),
 		},
 		{
 			Address:       gaiaValAddr + "2",
-			DelegationAmt: uint64(3_000_000),
+			DelegationAmt: sdk.NewIntFromUint64(3_000_000),
 			Weight:        uint64(6),
 		},
 	}
@@ -37,7 +38,7 @@ func (s *KeeperTestSuite) SetupSubmitHostZoneUnbondingMsg(hostZoneUnbonding reco
 			UnbondingFrequency: 3,
 			Validators:         gaiaValidators,
 			DelegationAccount:  &gaiaDelegationAccount,
-			StakedBal:          uint64(5_000_000),
+			StakedBal:          sdk.NewIntFromUint64(5_000_000),
 			ConnectionId:       ibctesting.FirstConnectionID,
 		},
 	}
@@ -68,8 +69,8 @@ func (s *KeeperTestSuite) SetupSubmitHostZoneUnbondingMsg(hostZoneUnbonding reco
 func (s *KeeperTestSuite) TestSubmitHostZoneUnbondingMsg_Successful() {
 	hostZoneUnbonding := recordtypes.HostZoneUnbonding{
 		HostZoneId:        HostChainId,
-		StTokenAmount:     1_900_000,
-		NativeTokenAmount: 1_000_000,
+		StTokenAmount:     sdk.NewIntFromUint64(1_900_000),
+		NativeTokenAmount: sdk.NewIntFromUint64(1_000_000),
 		Denom:             Atom,
 		Status:            recordtypes.HostZoneUnbonding_UNBONDING_QUEUE,
 	}
@@ -85,8 +86,8 @@ func (s *KeeperTestSuite) TestSubmitHostZoneUnbondingMsg_Successful() {
 func (s *KeeperTestSuite) TestSubmitHostZoneUnbondingMsg_NoMsgsToSubmit() {
 	hostZoneUnbonding := recordtypes.HostZoneUnbonding{
 		HostZoneId:        HostChainId,
-		StTokenAmount:     1_900_000,
-		NativeTokenAmount: 0,
+		StTokenAmount:     sdk.NewIntFromUint64(1_900_000),
+		NativeTokenAmount: sdk.NewIntFromUint64(0),
 		Denom:             Atom,
 		Status:            recordtypes.HostZoneUnbonding_UNBONDING_QUEUE,
 	}
@@ -102,8 +103,8 @@ func (s *KeeperTestSuite) TestSubmitHostZoneUnbondingMsg_NoMsgsToSubmit() {
 func (s *KeeperTestSuite) TestSubmitHostZoneUnbondingMsg_ErrorSubmittingUnbonding() {
 	hostZoneUnbonding := recordtypes.HostZoneUnbonding{
 		HostZoneId:        HostChainId,
-		StTokenAmount:     1_900_000,
-		NativeTokenAmount: 1_000_000,
+		StTokenAmount:     sdk.NewIntFromUint64(1_900_000),
+		NativeTokenAmount: sdk.NewIntFromUint64(1_000_000),
 		Denom:             Atom,
 		Status:            recordtypes.HostZoneUnbonding_UNBONDING_QUEUE,
 	}

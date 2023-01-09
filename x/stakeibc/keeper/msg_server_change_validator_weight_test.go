@@ -22,7 +22,7 @@ func (s *KeeperTestSuite) SetupChangeValidatorWeight() ChangeValidatorWeightTest
 			CommissionRate: 1,
 			Weight:         0,
 			Status:         stakeibctypes.Validator_ACTIVE,
-			DelegationAmt:  0,
+			DelegationAmt:  sdk.NewIntFromUint64(0),
 		},
 		{
 			Name:           "val2",
@@ -30,7 +30,7 @@ func (s *KeeperTestSuite) SetupChangeValidatorWeight() ChangeValidatorWeightTest
 			CommissionRate: 2,
 			Weight:         0,
 			Status:         stakeibctypes.Validator_ACTIVE,
-			DelegationAmt:  0,
+			DelegationAmt:  sdk.NewIntFromUint64(0),
 		},
 	}
 
