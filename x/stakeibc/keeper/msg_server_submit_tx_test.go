@@ -129,13 +129,3 @@ func (s *KeeperTestSuite) TestUpdateWithdrawalBalance_FailedToGetICATimeoutNanos
 	s.EqualError(err, expectedErr, "Hostzone is set without Stride Epoch so it should fail")
 }
 
-func (s *KeeperTestSuite) TestUpdateWithdrawalBalance_FailedToMakeRequest() {
-	tc := s.SetupUpdateWithdrawalBalance_emptyStrideEpoch()
-	//change hostzone's chainId
-	// tc.hostZone :=
-
-	err := s.App.StakeibcKeeper.UpdateWithdrawalBalance(s.Ctx, tc.hostZone)
-	expectedErr := "Failed to get ICA timeout nanos for epochType stride_epoch using param, error: "
-	expectedErr += "Failed to get epoch tracker for stride_epoch: invalid request: invalid request"
-	s.EqualError(err, expectedErr, "Hostzone is set without Stride Epoch so it should fail")
-}
