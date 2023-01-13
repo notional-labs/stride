@@ -129,3 +129,14 @@ func (s *KeeperTestSuite) TestUpdateWithdrawalBalance_FailedToGetICATimeoutNanos
 	s.EqualError(err, expectedErr, "Hostzone is set without Stride Epoch so it should fail")
 }
 
+func (s *KeeperTestSuite) TestUpdateWithdrawalBalance_EmptyConnectionId() {
+	tc := s.SetupUpdateWithdrawalBalance_valid()
+	//change hostzone's connectionId
+	tc.hostZone.ConnectionId = ""
+	s.App.StakeibcKeeper.SetHostZone(s.Ctx, tc.hostZone)
+
+	err := s.App.StakeibcKeeper.UpdateWithdrawalBalance(s.Ctx, tc.hostZone)
+	expectedErr := "[ICQ Validation Check] Failed! connection id cannot be empty: "
+	expectedErr += "invalid request"
+	s.EqualError(err, expectedErr, "Hostzone is set without Stride Epoch so it should fail")
+}
