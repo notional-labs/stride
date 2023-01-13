@@ -120,7 +120,7 @@ func (s *KeeperTestSuite) TestSetWithdrawalAddressOnHost_successful() {
 	s.Require().NoError(err)
 }
 
-func (s *KeeperTestSuite) TestUpdateWithdrawalBalance_FailedToGetICATimeoutNanos() {
+func (s *KeeperTestSuite) TestSetWithdrawalAddressOnHost_FailedToGetICATimeoutNanos() {
 	tc := s.SetupSetWithdrawalAddressOnHost_emptyStrideEpoch()
 
 	err := s.App.StakeibcKeeper.SetWithdrawalAddressOnHost(s.Ctx, tc.hostZone)
