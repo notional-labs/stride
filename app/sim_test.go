@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -12,8 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -133,9 +134,9 @@ func TestAppImportExport(t *testing.T) {
 		newDB.Close()
 		require.NoError(t, os.RemoveAll(newDir))
 	}()
-	newApp := NewStrideApp(log.NewNopLogger(), newDB, nil, true, map[int64]bool{}, newDir, 5, encConf, simapp.EmptyAppOptions{}, fauxMerkleModeOpt)
+	newApp := NewStrideApp(logger, newDB, nil, true, map[int64]bool{}, newDir, 5, encConf, simapp.EmptyAppOptions{}, fauxMerkleModeOpt)
 	require.Equal(t, Name, app.Name())
-
+	t.Logf("Order :%s", app.mm.OrderInitGenesis)
 	var genesisState GenesisState
 	err = json.Unmarshal(exported.AppState, &genesisState)
 	require.NoError(t, err)
@@ -144,7 +145,13 @@ func TestAppImportExport(t *testing.T) {
 	ctxB := newApp.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 	newApp.mm.InitGenesis(ctxB, app.AppCodec(), genesisState)
 	newApp.StoreConsensusParams(ctxB, exported.ConsensusParams)
+	temp := ctxB.KVStore(newApp.keys[authtypes.StoreKey])
+	genState := newApp.mm.ExportGenesis(ctxB, app.appCodec)
 
+	file, _ := json.Marshal(genState)
+	_ = ioutil.WriteFile("test2.json", file, 0644)
+
+	t.Logf("hehe %v", temp.Get(authtypes.GlobalAccountNumberKey))
 	t.Log("comparing stores...")
 
 	storeKeysPrefixes := []StoreKeysPrefixes{
@@ -171,6 +178,34 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[stakeibctypes.StoreKey], newApp.keys[stakeibctypes.StoreKey], [][]byte{}},
 	}
 
+	// t.Logf("auth A %s:", ctxA.KVStore(app.keys[authtypes.StoreKey]))
+	// t.Logf("auth B %s:", ctxB.KVStore(newApp.keys[authtypes.StoreKey]))
+	tempA := ctxA.KVStore(app.keys[authtypes.StoreKey])
+	tempB := ctxB.KVStore(newApp.keys[authtypes.StoreKey])
+	failedAs, failedBs := sdk.DiffKVStores(tempA, tempB, [][]byte{})
+	var log string
+	t.Logf("failed count %d", len(failedBs))
+	for i := 0; i < len(failedAs); i++ {
+		t.Logf("1 :%s", &failedAs[i])
+		t.Logf("2 :%s", &failedBs[i])
+	}
+	t.Logf("hehe %v", tempA.Get(authtypes.GlobalAccountNumberKey))
+	t.Logf("hehe %v", tempB.Get(authtypes.GlobalAccountNumberKey))
+
+	for i := 0; i < len(failedAs); i++ {
+		if len(failedAs[i].Value) == 0 && len(failedBs[i].Value) == 0 {
+			// skip if the value doesn't have any bytes
+			continue
+		}
+
+		decoder, ok := app.SimulationManager().StoreDecoders[app.keys[authtypes.StoreKey].Name()]
+		if ok {
+			log += decoder(failedAs[i], failedBs[i])
+		} else {
+			log += fmt.Sprintf("store A %X => %X\nstore B %X => %X\n", failedAs[i].Key, failedAs[i].Value, failedBs[i].Key, failedBs[i].Value)
+		}
+	}
+
 	// diff both stores
 	for _, skp := range storeKeysPrefixes {
 		storeA := ctxA.KVStore(skp.A)
@@ -178,7 +213,11 @@ func TestAppImportExport(t *testing.T) {
 
 		failedKVAs, failedKVBs := sdk.DiffKVStores(storeA, storeB, skp.Prefixes)
 		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
-
+		t.Logf("KVA %d", len(failedKVAs))
+		t.Logf("KVB %d", len(failedKVBs))
+		t.Logf("skp.A %s", skp.A)
+		t.Logf("skp.B %s", skp.B)
+		t.Logf("SimulationManager %s", skp.B)
 		t.Logf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), skp.A, skp.B)
 		require.Len(t, failedKVAs, 0, simapp.GetSimulationLog(skp.A.Name(), app.SimulationManager().StoreDecoders, failedKVAs, failedKVBs))
 	}

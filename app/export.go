@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"log"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -30,6 +31,9 @@ func (app *StrideApp) ExportAppStateAndValidators(
 	}
 
 	genState := app.mm.ExportGenesis(ctx, app.appCodec)
+
+	file, _ := json.Marshal(genState)
+	_ = ioutil.WriteFile("test.json", file, 0644)
 	appState, err := json.MarshalIndent(genState, "", "  ")
 	if err != nil {
 		return servertypes.ExportedApp{}, err

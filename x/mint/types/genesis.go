@@ -27,3 +27,7 @@ func ValidateGenesis(data GenesisState) error {
 
 	return ValidateMinter(data.Minter)
 }
+
+type Counter struct {
+	Count bool
+}

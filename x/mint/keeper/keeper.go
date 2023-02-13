@@ -9,14 +9,16 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	"github.com/Stride-Labs/stride/v5/x/mint/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	"github.com/Stride-Labs/stride/v5/x/mint/types"
 )
+
+var NguyenNgu = 0
 
 // Keeper of the mint store.
 type Keeper struct {
@@ -64,6 +66,11 @@ func NewKeeper(
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
+}
+
+// Logger returns a module-specific logger.
+func (k Keeper) AccountKeeper(ctx sdk.Context) types.AccountKeeper {
+	return k.accountKeeper
 }
 
 // Set the mint hooks.
@@ -229,8 +236,10 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 }
 
 // set up a new module account address
-func (k Keeper) SetupNewModuleAccount(ctx sdk.Context, submoduleName string, submoduleNamespace string) {
+func (k Keeper) SetupNewModuleAccount(ctx sdk.Context, submoduleName string, submoduleNamespace string, counter *types.Counter) {
 	// create and save the module account to the account keeper
+
+	counter.Count = true
 	acctAddress := k.GetSubmoduleAddress(submoduleName, submoduleNamespace)
 	acc := k.accountKeeper.NewAccount(
 		ctx,
@@ -240,6 +249,8 @@ func (k Keeper) SetupNewModuleAccount(ctx sdk.Context, submoduleName string, sub
 		),
 	)
 	k.Logger(ctx).Info(fmt.Sprintf("Created new %s.%s module account %s", types.ModuleName, submoduleName, acc.GetAddress().String()))
+	counter.Count = false
+	fmt.Println("hehe", acc)
 	k.accountKeeper.SetAccount(ctx, acc)
 }
 

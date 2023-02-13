@@ -1,6 +1,8 @@
 package mint
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/Stride-Labs/stride/v5/x/mint/keeper"
@@ -9,6 +11,7 @@ import (
 
 // InitGenesis new mint genesis.
 func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper, data *types.GenesisState) {
+	count := types.Counter{Count: false}
 	data.Minter.EpochProvisions = data.Params.GenesisEpochProvisions
 	keeper.SetMinter(ctx, data.Minter)
 	keeper.SetParams(ctx, data.Params)
@@ -17,12 +20,20 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, ak types.AccountKeeper, 
 		ak.GetModuleAccount(ctx, types.ModuleName)
 	}
 
-	// set up new community module accounts
-	keeper.SetupNewModuleAccount(ctx, types.CommunityGrowthSubmoduleName, types.SubmoduleCommunityNamespaceKey)
-	keeper.SetupNewModuleAccount(ctx, types.CommunitySecurityBudgetSubmoduleName, types.SubmoduleCommunityNamespaceKey)
-	keeper.SetupNewModuleAccount(ctx, types.CommunityUsageSubmoduleName, types.SubmoduleCommunityNamespaceKey)
+	if count.Count {
+		keeper.SetupNewModuleAccount(ctx, types.CommunityGrowthSubmoduleName, types.SubmoduleCommunityNamespaceKey, &count)
+	}
+
+	if count.Count {
+		keeper.SetupNewModuleAccount(ctx, types.CommunitySecurityBudgetSubmoduleName, types.SubmoduleCommunityNamespaceKey, &count)
+	}
+
+	if count.Count {
+		keeper.SetupNewModuleAccount(ctx, types.CommunityUsageSubmoduleName, types.SubmoduleCommunityNamespaceKey, &count)
+	}
 
 	keeper.SetLastReductionEpochNum(ctx, data.ReductionStartedEpoch)
+	fmt.Println(keeper)
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
