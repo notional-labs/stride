@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -143,6 +144,14 @@ func TestAppImportExport(t *testing.T) {
 	ctxB := newApp.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 	newApp.mm.InitGenesis(ctxB, app.AppCodec(), genesisState)
 	newApp.StoreConsensusParams(ctxB, exported.ConsensusParams)
+	
+	genState :=  app.mm.ExportGenesis(ctxA, app.appCodec)
+	file, _ := json.Marshal(genState)
+	_ = ioutil.WriteFile("test.json", file, 0644)
+
+	genState =  newApp.mm.ExportGenesis(ctxB, app.appCodec)
+	file, _ = json.Marshal(genState)
+	_ = ioutil.WriteFile("test2.json", file, 0644)
 
 	t.Log("comparing stores...")
 
