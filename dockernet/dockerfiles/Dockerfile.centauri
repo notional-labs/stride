@@ -18,13 +18,13 @@ RUN set -eux; \
     fi; \
     go mod download;
 
-RUN make build
+RUN LEDGER_ENABLED=false BUILD_TAGS=muslc LINK_STATICALLY=true make build
 
-FROM alpine:3.15
-COPY --from=builder /opt/composable-centauri/build/centaurid /usr/local/bin/
+FROM alpine:3.16
+COPY --from=builder /opt/composable-centauri/bin/centaurid /usr/local/bin/
 RUN apk add bash vim \
-    && addgroup -g 1000 centaurid \
-    && adduser -S -h /home/centaurid -D centaurid -u 1000 -G centaurid
+    && addgroup -g 1000 composable-centauri \
+    && adduser -S -h /home/composable-centauri -D composable-centauri -u 1000 -G composable-centauri
 
 USER 1000
 WORKDIR /home/composable-centauri
