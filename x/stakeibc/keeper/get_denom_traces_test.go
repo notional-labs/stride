@@ -9,8 +9,8 @@ import (
 )
 
 func (s *KeeperTestSuite) TestIBCDenom() {
-	chainId := "{CHAIN_ID}"
-	denom := "{minimal_denom}"
+	chainId := "CENTAURI"
+	denom := "upica"
 	for i := 0; i < 4; i++ {
 		sourcePrefix := transfertypes.GetDenomPrefix("transfer", fmt.Sprintf("channel-%d", i))
 		prefixedDenom := sourcePrefix + denom

@@ -29,12 +29,13 @@ HOST_CHAINS=()
 #  - EVMOS
 #  - HOST (Stride chain enabled as a host zone)
 if [[ "${ALL_HOST_CHAINS:-false}" == "true" ]]; then 
-  HOST_CHAINS=(GAIA EVMOS HOST)
+  HOST_CHAINS=(GAIA EVMOS HOST CENTAURI)
 elif [[ "${#HOST_CHAINS[@]}" == "0" ]]; then 
-  HOST_CHAINS=(GAIA)
+  HOST_CHAINS=(GAIA CENTAURI)
 fi
 
 # DENOMS
+CENTAURI_DENOM="upica"
 STRD_DENOM="ustrd"
 ATOM_DENOM="uatom"
 JUNO_DENOM="ujuno"
@@ -42,6 +43,7 @@ OSMO_DENOM="uosmo"
 STARS_DENOM="ustars"
 WALK_DENOM="uwalk"
 EVMOS_DENOM="aevmos"
+STCENTAURI_DENOM="stupica"
 STATOM_DENOM="stuatom"
 STJUNO_DENOM="stujuno"
 STOSMO_DENOM="stuosmo"
@@ -80,6 +82,11 @@ IBC_HOST_CHANNEL_0_DENOM='ibc/82DBA832457B89E1A344DA51761D92305F7581B7EA6C18D850
 IBC_HOST_CHANNEL_1_DENOM='ibc/FB7E2520A1ED6890E1632904A4ACA1B3D2883388F8E2B88F2D6A54AA15E4B49E'
 IBC_HOST_CHANNEL_2_DENOM='ibc/D664DC1D38648FC4C697D9E9CF2D26369318DFE668B31F81809383A8A88CFCF4'
 IBC_HOST_CHANNEL_3_DENOM='ibc/FD7AA7EB2C1D5D97A8693CCD71FFE3F5AFF12DB6756066E11E69873DE91A33EA'
+
+IBC_CENTAURI_CHANNEL_0_DENOM='ibc/DAE8062947A8AF88C6107C50B4C261B62C85C649B3DA78ECFC1C33A1BE212E7F'
+IBC_CENTAURI_CHANNEL_1_DENOM='ibc/3CD3F387A02D3911C95D8F19A4CC7BAF32E7C82503B13429C80245224DDF6088'
+IBC_CENTAURI_CHANNEL_2_DENOM='ibc/B09BDD6F80F75257B0D6F7AD615B42D66C43C1452FEBF8B908E1DD9EACD02036'
+IBC_CENTAURI_CHANNEL_3_DENOM='ibc/774AFAF70B25E74200BC19C231FC65A2E2549F1EF4A8BC851426779090783719'
 
 # COIN TYPES
 # Coin types can be found at https://github.com/satoshilabs/slips/blob/master/slip-0044.md
@@ -153,6 +160,20 @@ else
   fi
 fi
 STRIDE_MAIN_CMD="$STRIDE_BINARY --home $DOCKERNET_HOME/state/${STRIDE_NODE_PREFIX}1"
+
+#CENTAURI 
+CENTAURI_CHAIN_ID=CENTAURI
+CENTAURI_NODE_PREFIX=centauri
+CENTAURI_NUM_NODES=3
+CENTAURI_BINARY="$DOCKERNET_HOME/../build/centaurid"
+CENTAURI_VAL_PREFIX=nval
+CENTAURI_ADDRESS_PREFIX=centauri
+CENTAURI_REV_ACCT=nrev1
+CENTAURI_DENOM=$CENTAURI_DENOM
+CENTAURI_RPC_PORT=25957
+CENTAURI_MAIN_CMD="$CENTAURI_BINARY --home $DOCKERNET_HOME/state/${CENTAURI_NODE_PREFIX}1"
+CENTAURI_RECEIVER_ADDRESS=centauri1u6huc6rshmt9rxpu9nrwfgwsccrl9c83rxx2l0
+CENTAURI_MICRO_DENOM_UNITS=000000000000
 
 # GAIA 
 GAIA_CHAIN_ID=GAIA
@@ -234,6 +255,7 @@ EVMOS_RECEIVER_ADDRESS='evmos123z469cfejeusvk87ufrs5520wmdxmmlc7qzuw'
 EVMOS_MICRO_DENOM_UNITS="000000000000000000000000"
 
 # RELAYER
+RELAYER_CENTAURI_EXEC="docker-compose run --rm relayer-centauri"
 RELAYER_GAIA_EXEC="$DOCKER_COMPOSE run --rm relayer-gaia"
 RELAYER_GAIA_ICS_EXEC="$DOCKER_COMPOSE run --rm relayer-gaia-ics"
 RELAYER_JUNO_EXEC="$DOCKER_COMPOSE run --rm relayer-juno"
@@ -251,6 +273,7 @@ RELAYER_HOST_ACCT=rly6
 RELAYER_EVMOS_ACCT=rly7
 RELAYER_STRIDE_ICS_ACCT=rly11
 RELAYER_GAIA_ICS_ACCT=rly12
+RELAYER_CENTAURI_ACCT=rly13
 RELAYER_ACCTS=(
   $RELAYER_GAIA_ACCT 
   $RELAYER_JUNO_ACCT 
@@ -259,6 +282,7 @@ RELAYER_ACCTS=(
   $RELAYER_HOST_ACCT 
   $RELAYER_EVMOS_ACCT
   $RELAYER_GAIA_ICS_ACCT
+  $RELAYER_CENTAURI_ACCT
 )
 
 RELAYER_GAIA_MNEMONIC="fiction perfect rapid steel bundle giant blade grain eagle wing cannon fever must humble dance kitchen lazy episode museum faith off notable rate flavor"
@@ -268,6 +292,7 @@ RELAYER_STARS_MNEMONIC="deposit dawn erosion talent old broom flip recipe pill h
 RELAYER_HOST_MNEMONIC="renew umbrella teach spoon have razor knee sock divert inner nut between immense library inhale dog truly return run remain dune virus diamond clinic"
 RELAYER_GAIA_ICS_MNEMONIC="size chimney clog job robot thunder gaze vapor economy smooth kit denial alter merit produce front force eager outside mansion believe fan tonight detect"
 RELAYER_EVMOS_MNEMONIC="science depart where tell bus ski laptop follow child bronze rebel recall brief plug razor ship degree labor human series today embody fury harvest"
+RELAYER_CENTAURI_MNEMONIC="chuckle salad danger critic marble dragon minor chef crystal census taxi initial silent juice dune page promote screen talk shiver kiss island pond thunder"
 RELAYER_MNEMONICS=(
   "$RELAYER_GAIA_MNEMONIC"
   "$RELAYER_JUNO_MNEMONIC"
@@ -276,6 +301,7 @@ RELAYER_MNEMONICS=(
   "$RELAYER_HOST_MNEMONIC"
   "$RELAYER_EVMOS_MNEMONIC"
   "$RELAYER_GAIA_ICS_MNEMONIC"
+  "$RELAYER_CENTAURI_MNEMONIC"
 )
 
 STRIDE_ADDRESS() { 
@@ -300,6 +326,9 @@ HOST_ADDRESS() {
 }
 EVMOS_ADDRESS() { 
   $EVMOS_MAIN_CMD keys show ${EVMOS_VAL_PREFIX}1 --keyring-backend test -a 
+}
+CENTAURI_ADDRESS() { 
+  $CENTAURI_MAIN_CMD keys show ${CENTAURI_VAL_PREFIX}1 --keyring-backend test -a 
 }
 
 CSLEEP() {
