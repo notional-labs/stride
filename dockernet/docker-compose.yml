@@ -268,7 +268,7 @@ services:
   centauri1:
     image: stridezone:centauri
     volumes:
-      - ./dockernet/state/centauri1:/home/centauri/.centaurid
+      - ./state/centauri1:/home/composable-centauri/.banksy
     ports:
       - "25957:26657"
       - "1247:1317"
@@ -277,22 +277,22 @@ services:
   centauri2:
     image: stridezone:centauri
     volumes:
-      - ./dockernet/state/centauri2:/home/centauri/.centaurid
+      - ./state/centauri2:/home/composable-centauri/.banksy
 
   centauri3:
     image: stridezone:centauri
     volumes:
-      - ./dockernet/state/centauri3:/home/centauri/.centaurid
+      - ./state/centauri3:/home/composable-centauri/.banksy
 
   centauri4:
     image: stridezone:centauri
     volumes:
-      - ./dockernet/state/centauri4:/home/centauri/.centaurid
+      - ./state/centauri4:/home/composable-centauri/.banksy
 
   centauri5:
     image: stridezone:centauri
     volumes:
-      - ./dockernet/state/centauri5:/home/centauri/.centaurid
+      - ./state/centauri5:/home/composable-centauri/.banksy
 
   relayer-centauri:
     image: stridezone:relayer
