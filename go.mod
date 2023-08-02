@@ -178,6 +178,7 @@ replace (
 	// Use the keyring specified by the cosmos-sdk
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	github.com/btcsuite/btcd => github.com/btcsuite/btcd v0.22.2 //indirect
+	github.com/cosmos/cosmos-sdk => ./cosmos-sdk
 	github.com/cosmos/interchain-security/v3 => github.com/Stride-Labs/interchain-security/v3 v3.1.1-0.20230713175550-227e13e60bac
 
 	// fork cast to add additional error checking
