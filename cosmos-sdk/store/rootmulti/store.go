@@ -1124,6 +1124,7 @@ func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore
 	storeKeys := keysForStoreKeyMap(storeMap)
 
 	for _, key := range storeKeys {
+		fmt.Println("commit store", key.Name())
 		store := storeMap[key]
 		last := store.LastCommitID()
 

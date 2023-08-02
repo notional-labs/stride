@@ -1,0 +1,20 @@
+name: Lint
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  golangci:
+    # We need to run the linter on the same image we use for building, since it
+    # needs the C libraries installed for the dependencies to typecheck.
+    runs-on: ubuntu-latest
+    container: cometbft/cometbft-db-testing
+    steps:
+      - uses: actions/checkout@v3
+      - uses: golangci/golangci-lint-action@v3.4.0
+        with:
+          args: --timeout 10m
+          version: v1.51.2
+          github-token: ${{ secrets.github_token }}
