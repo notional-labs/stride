@@ -33,8 +33,8 @@ setup_file() {
   STRIDE_TRANFER_CHANNEL="channel-${TRANSFER_CHANNEL_NUMBER}"
   HOST_TRANSFER_CHANNEL="channel-0"
 
-  TRANSFER_AMOUNT=5000000
-  STAKE_AMOUNT=1000000
+  TRANSFER_AMOUNT=5000000000
+  STAKE_AMOUNT=1000000000
   REDEEM_AMOUNT=10000
   PACKET_FORWARD_STAKE_AMOUNT=30000
 
@@ -76,6 +76,7 @@ setup_file() {
 ##############################################################################################
 # confirm host zone is registered
 @test "[INTEGRATION-BASIC-$CHAIN_NAME] host zones successfully registered" {
+  echo
   run $STRIDE_MAIN_CMD q stakeibc show-host-zone $HOST_CHAIN_ID
   assert_line "  host_denom: $HOST_DENOM"
   assert_line "  chain_id: $HOST_CHAIN_ID"

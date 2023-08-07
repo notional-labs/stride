@@ -120,7 +120,7 @@ chains:
       account-prefix: centauri
       keyring-backend: test
       gas-adjustment: 1.3
-      gas-prices: 0.02upica
+      gas-prices: 0.02ppica
       coin-type: 118
       debug: true
       timeout: 20s
