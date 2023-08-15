@@ -1,9 +1,13 @@
 package db
 
 import (
+	"fmt"
+
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 )
+
+var Println = false
 
 type goLevelDBBatch struct {
 	db    *GoLevelDB
@@ -48,6 +52,10 @@ func (b *goLevelDBBatch) Delete(key []byte) error {
 
 // Write implements Batch.
 func (b *goLevelDBBatch) Write() error {
+	fmt.Println("commit size:", len(b.batch.Dump()))
+	// if Println {
+	// 	b.batch.PrintContent()
+	// }
 	return b.write(false)
 }
 

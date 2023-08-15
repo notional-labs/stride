@@ -3,7 +3,9 @@ package cachekv
 import (
 	"bytes"
 	"io"
+	"runtime"
 	"sort"
+	"strings"
 	"sync"
 
 	dbm "github.com/cometbft/cometbft-db"
@@ -22,6 +24,8 @@ type cValue struct {
 	value []byte
 	dirty bool
 }
+
+var mem_prof = map[string]int{}
 
 // Store wraps an in-memory cache around an underlying types.KVStore.
 type Store struct {
@@ -74,6 +78,33 @@ func (store *Store) Set(key []byte, value []byte) {
 
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
+	// store.parent.Set([]byte("vuong"), []byte("ngu"))
+	// 000000
+
+	var funcName string
+	for i := 1; i <= 3; i++ {
+		pc, _, _, ok := runtime.Caller(i)
+		details := runtime.FuncForPC(pc)
+
+		if ok && details != nil {
+			if strings.Contains(details.Name(), "github.com/cosmos/cosmos-sdk/x") {
+				pc, _, _, ok := runtime.Caller(i + 2)
+				details := runtime.FuncForPC(pc)
+				if ok && details != nil {
+					funcName = details.Name()
+				}
+				break
+			}
+		}
+	}
+
+	if funcName != "" {
+		if _, ok := types.Mem_prof[funcName]; ok {
+			types.Mem_prof[funcName] += len(key) + len(value)
+		} else {
+			types.Mem_prof[funcName] = len(key) + len(value)
+		}
+	}
 
 	store.setCacheValue(key, value, true)
 }

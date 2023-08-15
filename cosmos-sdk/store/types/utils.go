@@ -6,6 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
+var Mem_prof = map[string]int{}
+
 // KVStorePrefixIterator iterates over all the keys with a certain prefix in ascending order
 func KVStorePrefixIterator(kvs KVStore, prefix []byte) Iterator {
 	return kvs.Iterator(prefix, PrefixEndBytes(prefix))

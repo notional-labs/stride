@@ -463,9 +463,27 @@ func (rs *Store) Commit() types.CommitID {
 		panic(err)
 	}
 
+	printMap()
 	return types.CommitID{
 		Version: version,
 		Hash:    rs.lastCommitInfo.Hash(),
+	}
+}
+
+var num_block = 0
+
+func printMap() {
+	num_block += 1
+	keys := make([]string, 0, len(types.Mem_prof))
+	for key := range types.Mem_prof {
+		keys = append(keys, key)
+	}
+	sort.SliceStable(keys, func(i, j int) bool {
+		return types.Mem_prof[keys[i]] > types.Mem_prof[keys[j]]
+	})
+	fmt.Println("block num:", num_block)
+	for _, k := range keys {
+		fmt.Println(k, ":", types.Mem_prof[k])
 	}
 }
 
@@ -938,6 +956,7 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		db = dbm.NewPrefixDB(params.db, []byte("s/_/"))
 	} else {
 		prefix := "s/k:" + params.key.Name() + "/"
+		fmt.Println(prefix)
 		db = dbm.NewPrefixDB(rs.db, []byte(prefix))
 	}
 
@@ -1125,6 +1144,9 @@ func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore
 
 	for _, key := range storeKeys {
 		fmt.Println("commit store", key.Name())
+		if key.Name() == "distribution" {
+			dbm.Println = true
+		}
 		store := storeMap[key]
 		last := store.LastCommitID()
 
@@ -1138,6 +1160,7 @@ func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore
 		} else {
 			commitID = store.Commit()
 		}
+		dbm.Println = false
 
 		storeType := store.GetStoreType()
 		if storeType == types.StoreTypeTransient || storeType == types.StoreTypeMemory {

@@ -36,6 +36,7 @@ var (
 
 // Store Implements types.KVStore and CommitKVStore.
 type Store struct {
+	logKV  bool
 	tree   Tree
 	logger log.Logger
 }
@@ -86,9 +87,15 @@ func LoadStoreWithInitialVersion(db dbm.DB, logger log.Logger, key types.StoreKe
 		logger.Debug("Finished loading IAVL tree")
 	}
 
+	logKV := false
+	if key.Name() == "distribution" {
+		logKV = true
+	}
+
 	return &Store{
 		tree:   tree,
 		logger: logger,
+		logKV:  logKV,
 	}, nil
 }
 
@@ -194,7 +201,16 @@ func (st *Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.Ca
 func (st *Store) Set(key, value []byte) {
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
+	if string(key) == "vuong" {
+		return
+		// panic("vuong ngu")
+	}
 	_, err := st.tree.Set(key, value)
+	// if st.logKV {
+	// 	panic("dcm")
+	// 	fmt.Println("set k/v", string(key))
+	// 	fmt.Println("value", value)
+	// }
 	if err != nil && st.logger != nil {
 		st.logger.Error("iavl set error", "error", err.Error())
 	}
